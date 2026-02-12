@@ -59,13 +59,13 @@ Navi uses **Amazon Nova** through **Amazon Bedrock**:
 
 ## Prerequisites
 
-- **Node.js** 20.x or later
+- **Node.js** 18.x or later (20+ recommended)
 - **AWS Account** with Bedrock access
-- **AWS credentials** (AWS CLI profile or environment variables)
+- **AWS credentials** — required for the app to call Amazon Nova
 
 ### Model access
 
-Serverless foundation models like Amazon Nova 2 Lite are **automatically enabled** when you first invoke them in Bedrock. No manual activation needed—just call the Converse API or use the [model playground](https://console.aws.amazon.com/bedrock/) and the model will be enabled on first use.
+Serverless foundation models like Amazon Nova 2 Lite are **automatically enabled** when you first invoke them in Bedrock. No manual activation needed—just call the Converse API and the model will be enabled on first use.
 
 ---
 
@@ -78,17 +78,46 @@ npm install
 # Configure environment (create .env from .env.example)
 cp .env.example .env
 
-# Run development server
+# Add your AWS credentials to .env (see below)
+# Then run the dev server:
 npm run dev
 ```
 
-### Environment Variables
+Open [http://localhost:3000](http://localhost:3000) to chat with Navi.
 
-Create a `.env` file (see `.env.example`):
+### AWS Credentials
+
+You need valid AWS credentials so the app can call Amazon Bedrock. Choose one option:
+
+**Option A: Environment variables (recommended for local dev)**
+
+1. Create an access key in [IAM](https://console.aws.amazon.com/iam/) → Users → your user → Security credentials → Access keys.
+2. Copy `.env.example` to `.env` and fill in:
 
 ```env
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BEDROCK_MODEL_ID=amazon.nova-2-lite-v1:0
+```
+
+**Option B: AWS CLI profile**
+
+Run `aws configure` and enter your access key, secret key, and region. The app will use the default profile. To use a named profile, add `AWS_PROFILE=your-profile` to `.env`.
+
+**Required IAM permission**
+
+Your user needs `bedrock:InvokeModel` for the Nova model. Example policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "bedrock:InvokeModel",
+    "Resource": "arn:aws:bedrock:*::foundation-model/amazon.nova-2-lite-v1:0"
+  }]
+}
 ```
 
 ---
