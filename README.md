@@ -19,7 +19,7 @@ Navi uses Amazon Nova's reasoning capabilities to act as an intelligent personal
 
 ## Tech Stack
 
-Built with **JavaScript/TypeScript** (no Python). Core components:
+Built with **JavaScript/TypeScript**. Core components:
 
 | Component       | Technology |
 |----------------|------------|
@@ -29,7 +29,7 @@ Built with **JavaScript/TypeScript** (no Python). Core components:
 | Agent framework| LangChain.js + @langchain/aws |
 | Nova model     | `amazon.nova-2-lite-v1:0` (via Bedrock Converse API) |
 | Tools protocol | MCP (Model Context Protocol) supported by hackathon |
-| API / UI       | TBD (Next.js or Express + React) |
+| API / UI       | Next.js 14 (App Router) |
 
 ### Why This Stack?
 
@@ -97,11 +97,12 @@ BEDROCK_MODEL_ID=amazon.nova-2-lite-v1:0
 
 ```
 navi/
-├── src/
-│   ├── agent/        # Nova-powered agent logic
-│   ├── tools/        # Tools: calendar, reminders, documents
-│   ├── api/          # REST or Next.js API routes
-│   └── lib/          # Bedrock client, utilities
+├── app/
+│   ├── api/chat/     # POST /api/chat — Nova conversation
+│   ├── layout.tsx    # Root layout
+│   └── page.tsx     # Chat UI
+├── lib/
+│   └── bedrock.ts    # Bedrock client & chat()
 ├── package.json
 ├── tsconfig.json
 └── README.md

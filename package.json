@@ -1,0 +1,28 @@
+{
+  "name": "navi",
+  "version": "1.0.0",
+  "description": "> **Amazon Nova AI Hackathon Project** | [Devpost](https://amazon-nova.devpost.com) | Deadline: Mar 16, 2026",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.988.0",
+    "@aws-sdk/util-stream-node": "^3.374.0",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}
