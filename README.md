@@ -12,7 +12,9 @@ Navi uses Amazon Nova's reasoning capabilities to act as an intelligent personal
 
 - **Reminders** — Create reminders with the `create_reminder` tool (stored in session)
 - **Natural conversation** — Chat with formatted Markdown (headings, lists, links)
-- **Apple Calendar** — Sync reminders to iCloud (visible on iPhone) via CalDAV
+- **Apple Calendar** — Sync reminders to iCloud via CalDAV (visible on iPhone with notifications)
+  - Calendar groups: Family, Work, Home, Personal (e.g. "put in my Work calendar")
+  - iPhone notifications: default 15 min before; customizable (e.g. "remind me at 9:30" or "30 min before")
 - **Document organization** (planned) — Organize and find important documents
 
 ---
@@ -26,17 +28,16 @@ Built with **JavaScript/TypeScript**. Core components:
 | Runtime        | Node.js 20+ |
 | Language       | TypeScript |
 | AI / Agent     | Amazon Bedrock + Nova 2 Lite |
-| Agent framework| LangChain.js + @langchain/aws |
-| Nova model     | `amazon.nova-2-lite-v1:0` (via Bedrock Converse API) |
-| Tools protocol | MCP (Model Context Protocol) supported by hackathon |
+| SDK            | @aws-sdk/client-bedrock-runtime (Converse API) |
+| Nova model     | `us.amazon.nova-2-lite-v1:0` (inference profile) |
+| Calendar       | tsdav (iCloud CalDAV) |
 | API / UI       | Next.js 14 (App Router) |
 
 ### Why This Stack?
 
 - **Amazon Nova 2 Lite** — Fast, cost-effective reasoning model for everyday tasks ([AWS docs](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html))
-- **LangChain.js** — Hackathon-recommended framework for agentic AI; integrates with Bedrock and supports tool use
-- **Bedrock Converse API** — Provides tool use (function calling), streaming, and document understanding
-- **MCP** — Optional Model Context Protocol for extending tools (hackathon-supported)
+- **Bedrock Converse API** — Tool use (function calling), streaming, and document understanding
+- **iCloud CalDAV (tsdav)** — Sync reminders to Apple Calendar; events appear on iPhone with optional notifications
 
 ---
 
@@ -52,8 +53,7 @@ Navi uses **Amazon Nova** through **Amazon Bedrock**:
 
 - [Amazon Nova 2 Developer Guide](https://docs.aws.amazon.com/nova/latest/userguide/)
 - [Amazon Nova in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/service_code_examples_bedrock-runtime_amazon_nova.html)
-- [LangChain.js Bedrock Integration](https://js.langchain.com/v0.1/docs/integrations/chat/bedrock/)
-- [AWS Sample: LangChain.js Stream Agent](https://github.com/aws-samples/langchain-agents/tree/main/bedrock/langchain-js-stream-agent)
+- [Bedrock Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/converse.html) — tool use, streaming, structured output
 
 ---
 
@@ -149,6 +149,18 @@ Use your iCloud email and the app-specific password (not your main Apple ID pass
 ### 3. Restart the dev server
 
 Reminders you create through Navi will be added to your iCloud calendar and sync to your iPhone.
+
+### Calendar options
+
+You can tell Navi which calendar to use:
+- **Family** / **Work** / **Home** / **Personal** — e.g. "put this in my Work calendar" or "add to Family"
+- Events appear with your calendar’s color on your iPhone (Family = yellow, etc.)
+
+### iPhone notifications
+
+Each event gets a notification by default (**15 minutes before**). You can say:
+- "Remind me at 9:30" → notification at the event time
+- "Remind me 30 minutes before" → notification 30 min before
 
 ---
 
