@@ -8,12 +8,12 @@ Navi is a **Personal Life Admin Agent** powered by **Amazon Nova** that helps us
 
 Navi uses Amazon Nova's reasoning capabilities to act as an intelligent personal assistant. Tell Navi what you need in plain language, and it will help you stay on top of your life admin.
 
-### Features (Planned)
+### Features
 
-- **Scheduling** — Create and manage calendar events and appointments
-- **Reminders** — Set and track reminders for tasks and deadlines
-- **Document organization** — Organize, categorize, and find important documents
-- **Natural conversation** — Interact via chat using everyday language
+- **Reminders** — Create reminders with the `create_reminder` tool (stored in session)
+- **Natural conversation** — Chat with formatted Markdown (headings, lists, links)
+- **Apple Calendar** — Sync reminders to iCloud (visible on iPhone) via CalDAV
+- **Document organization** (planned) — Organize and find important documents
 
 ---
 
@@ -98,8 +98,10 @@ You need valid AWS credentials so the app can call Amazon Bedrock. Choose one op
 AWS_ACCESS_KEY_ID=your_access_key_here
 AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
-BEDROCK_MODEL_ID=amazon.nova-2-lite-v1:0
+BEDROCK_MODEL_ID=us.amazon.nova-2-lite-v1:0
 ```
+
+> **Note:** Use the inference profile ID `us.amazon.nova-2-lite-v1:0` (not the direct model ID). Nova 2 Lite requires inference profiles for on-demand invocation.
 
 **Option B: AWS CLI profile**
 
@@ -122,6 +124,34 @@ Your user needs `bedrock:InvokeModel` for the Nova model. Example policy:
 
 ---
 
+## Apple Calendar (iCloud) Integration
+
+To sync reminders to your iPhone’s Calendar via iCloud:
+
+### 1. Create an app-specific password
+
+1. Go to [account.apple.com](https://account.apple.com) and sign in
+2. Open **Sign-In and Security** → **App-Specific Passwords**
+3. Click **Generate an app-specific password**
+4. Name it "Navi" (or similar) and copy the 16-character password
+
+Your Apple ID must have two-factor authentication enabled.
+
+### 2. Add to `.env`
+
+```env
+APPLE_ID=your_icloud_email@icloud.com
+APPLE_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+```
+
+Use your iCloud email and the app-specific password (not your main Apple ID password).
+
+### 3. Restart the dev server
+
+Reminders you create through Navi will be added to your iCloud calendar and sync to your iPhone.
+
+---
+
 ## Project Structure
 
 ```
@@ -131,7 +161,8 @@ navi/
 │   ├── layout.tsx    # Root layout
 │   └── page.tsx     # Chat UI
 ├── lib/
-│   └── bedrock.ts    # Bedrock client & chat()
+│   ├── bedrock.ts    # Bedrock client & chat()
+│   └── appleCalendar.ts  # iCloud CalDAV integration
 ├── package.json
 ├── tsconfig.json
 └── README.md

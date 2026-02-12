@@ -17,7 +17,9 @@
     "@aws-sdk/util-stream-node": "^3.374.0",
     "next": "^14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "tsdav": "^2.1.7"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",

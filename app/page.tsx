@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -33,11 +34,16 @@ export default function Home() {
     setLoading(true);
 
     try {
+      const allMessages = [...messages, userMessage];
+      // Bedrock Converse API requires the conversation to start with a user message
+      const fromFirstUser = allMessages.slice(
+        allMessages.findIndex((m) => m.role === "user")
+      );
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
+          messages: fromFirstUser.map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -135,11 +141,56 @@ export default function Home() {
                     msg.role === "user"
                       ? "1px solid rgba(59, 130, 246, 0.4)"
                       : "1px solid rgba(255,255,255,0.08)",
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 1.5,
+                  lineHeight: 1.6,
                 }}
               >
-                {msg.content}
+                {msg.role === "user" ? (
+                  msg.content
+                ) : (
+                  <ReactMarkdown
+                    components={{
+                      a: ({ href, children }) => (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#60a5fa", textDecoration: "underline" }}
+                        >
+                          {children}
+                        </a>
+                      ),
+                      ul: ({ children }) => (
+                        <ul style={{ margin: "0.5rem 0", paddingLeft: "1.25rem" }}>
+                          {children}
+                        </ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol style={{ margin: "0.5rem 0", paddingLeft: "1.25rem" }}>
+                          {children}
+                        </ol>
+                      ),
+                      li: ({ children }) => (
+                        <li style={{ marginBottom: "0.25rem" }}>{children}</li>
+                      ),
+                      strong: ({ children }) => (
+                        <strong style={{ fontWeight: 600 }}>{children}</strong>
+                      ),
+                      h3: ({ children }) => (
+                        <h3
+                          style={{
+                            margin: "0.75rem 0 0.5rem",
+                            fontSize: "0.95rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {children}
+                        </h3>
+                      ),
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                )}
               </div>
             </div>
           ))}
