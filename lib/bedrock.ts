@@ -2,7 +2,11 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import { createEvent as createAppleCalendarEvent, isConfigured as isAppleCalendarConfigured } from "@/lib/appleCalendar";
+import {
+  createEvent as createAppleCalendarEvent,
+  isConfigured as isAppleCalendarConfigured,
+  listUpcomingEvents as fetchUpcomingEvents,
+} from "@/lib/appleCalendar";
 
 const region = process.env.AWS_REGION || "us-east-1";
 const modelId =
@@ -15,12 +19,17 @@ export interface ChatMessage {
   content: string;
 }
 
-const SYSTEM_PROMPT = `You are Navi, a friendly Personal Life Admin assistant. You help users manage everyday tasks like:
-- Scheduling appointments and calendar events
-- Setting reminders
-- Organizing documents and important information
+const SYSTEM_PROMPT = `You are Navi, a friendly Personal Life Admin assistant. You coordinate two sub-agents:
+1. **Scheduler Agent** — calendar events, reminders, schedules (create_reminder, list_reminders, get_today_schedule, list_upcoming_events)
+2. **Organizer Agent** — documents and lists (planned; for now give helpful guidance)
+
+When the user greets you or asks "what's up" or "what do I have today", proactively call get_today_schedule to show their day. Offer to add reminders or adjust if relevant.
 
 When a user asks to set a reminder or add a calendar event, use the create_reminder tool. If Apple Calendar is connected, events go to iCloud (sync to iPhone) with a notification 15 min before. Use the 'calendar' parameter when they want Family vs Work (e.g. "put in my Work calendar" → calendar: "work"). Default alert is 15 min before; they can ask for different timing.
+
+Use get_today_schedule for "what's on my calendar", "what do I have today", "my schedule", etc.
+Use list_upcoming_events for "what's tomorrow", "next few days", "this week" (use daysAhead: 7).
+
 Be helpful, concise, and conversational. Use Markdown formatting (headings, bold, lists, links) in your responses for clarity.`;
 
 const CREATE_REMINDER_TOOL = {
@@ -70,7 +79,7 @@ const LIST_REMINDERS_TOOL = {
   toolSpec: {
     name: "list_reminders",
     description:
-      "Lists all reminders the user has created in this session. Use when the user asks what reminders they have.",
+      "Lists reminders created in this session only. Use when the user asks about session reminders. For real calendar events use get_today_schedule or list_upcoming_events.",
     inputSchema: {
       json: {
         type: "object",
@@ -82,8 +91,54 @@ const LIST_REMINDERS_TOOL = {
   },
 };
 
+const GET_TODAY_SCHEDULE_TOOL = {
+  toolSpec: {
+    name: "get_today_schedule",
+    description:
+      "Gets the user's calendar events for today from Apple Calendar (iCloud). Use when they ask what they have today, what's on their calendar, their schedule, or when greeting them to proactively show their day.",
+    inputSchema: {
+      json: {
+        type: "object",
+        properties: {
+          _placeholder: { type: "string", description: "Unused" },
+        },
+      },
+    },
+  },
+};
+
+const LIST_UPCOMING_EVENTS_TOOL = {
+  toolSpec: {
+    name: "list_upcoming_events",
+    description:
+      "Lists calendar events for a date or date range from Apple Calendar. Use for 'what's tomorrow', 'this week', 'next few days', etc.",
+    inputSchema: {
+      json: {
+        type: "object",
+        properties: {
+          dateStr: {
+            type: "string",
+            description:
+              "Date: 'today', 'tomorrow', or YYYY-MM-DD",
+          },
+          daysAhead: {
+            type: "number",
+            description:
+              "Number of days to include (default 1). Use 7 for a week.",
+          },
+        },
+      },
+    },
+  },
+};
+
 const TOOL_CONFIG = {
-  tools: [CREATE_REMINDER_TOOL, LIST_REMINDERS_TOOL],
+  tools: [
+    CREATE_REMINDER_TOOL,
+    LIST_REMINDERS_TOOL,
+    GET_TODAY_SCHEDULE_TOOL,
+    LIST_UPCOMING_EVENTS_TOOL,
+  ],
 };
 
 // In-memory reminder store (per server instance; resets on restart)
@@ -151,6 +206,46 @@ function listReminders(): string {
     .join("\n");
 }
 
+function formatEventTime(d: Date): string {
+  return d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function formatEventsForModel(events: Array<{ title: string; start: Date; end: Date; calendar?: string }>): string {
+  if (events.length === 0) return "No events found for that period.";
+  return events
+    .map(
+      (e, i) =>
+        `${i + 1}. **${e.title}** — ${formatEventTime(e.start)} to ${formatEventTime(e.end)}${e.calendar ? ` (${e.calendar})` : ""}`
+    )
+    .join("\n");
+}
+
+async function getTodaySchedule(): Promise<string> {
+  const result = await fetchUpcomingEvents({ dateStr: "today", daysAhead: 1 });
+  if (!result.success) {
+    return `Could not fetch calendar: ${result.error}. Apple Calendar may not be configured.`;
+  }
+  return formatEventsForModel(result.events);
+}
+
+async function executeListUpcomingEvents(input: {
+  dateStr?: string;
+  daysAhead?: number;
+}): Promise<string> {
+  const result = await fetchUpcomingEvents({
+    dateStr: input.dateStr || "today",
+    daysAhead: input.daysAhead ?? 1,
+  });
+  if (!result.success) {
+    return `Could not fetch calendar: ${result.error}.`;
+  }
+  return formatEventsForModel(result.events);
+}
+
 export async function chat(messages: ChatMessage[]): Promise<string> {
   // Convert simple messages to Converse format (use type assertion for tool-use messages)
   const converseMessages: Array<{ role: "user" | "assistant"; content: unknown[] }> =
@@ -210,6 +305,11 @@ export async function chat(messages: ChatMessage[]): Promise<string> {
               resultText = await executeCreateReminder(params);
             } else if (name === "list_reminders") {
               resultText = listReminders();
+            } else if (name === "get_today_schedule") {
+              resultText = await getTodaySchedule();
+            } else if (name === "list_upcoming_events") {
+              const params = input as { dateStr?: string; daysAhead?: number };
+              resultText = await executeListUpcomingEvents(params);
             } else {
               resultText = `Unknown tool: ${name}`;
             }

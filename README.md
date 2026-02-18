@@ -8,14 +8,22 @@ Navi is a **Personal Life Admin Agent** powered by **Amazon Nova** that helps us
 
 Navi uses Amazon Nova's reasoning capabilities to act as an intelligent personal assistant. Tell Navi what you need in plain language, and it will help you stay on top of your life admin.
 
+### Who It Helps
+
+Navi delivers meaningful impact for:
+
+- **Busy parents and caregivers** — Coordinate family schedules, avoid missed appointments and school pickups
+- **Neurodivergent users** — Reduce life-admin overwhelm with a conversational interface and proactive schedule visibility
+- **Small teams and freelancers** — Keep work and personal calendars organized (Family vs Work) in one place
+- **Anyone who forgets** — Natural-language reminders with iPhone notifications so nothing slips through
+
 ### Features
 
-- **Reminders** — Create reminders with the `create_reminder` tool (stored in session)
-- **Natural conversation** — Chat with formatted Markdown (headings, lists, links)
-- **Apple Calendar** — Sync reminders to iCloud via CalDAV (visible on iPhone with notifications)
-  - Calendar groups: Family, Work, Home, Personal (e.g. "put in my Work calendar")
-  - iPhone notifications: default 15 min before; customizable (e.g. "remind me at 9:30" or "30 min before")
-- **Document organization** (planned) — Organize and find important documents
+- **Multi-agent architecture** — Navi coordinates a Scheduler Agent (calendar, reminders) and Organizer Agent (documents, planned)
+- **Proactive assistance** — Ask "what's up?" or "what do I have today?" and Navi fetches your real calendar and shows your day
+- **Reminders** — Create reminders; sync to Apple Calendar (iCloud) with Family/Work/Home/Personal
+- **Calendar visibility** — `get_today_schedule` and `list_upcoming_events` read from iCloud (e.g. "what's tomorrow?", "this week")
+- **Natural conversation** — Chat with Markdown, keyboard-accessible, screen-reader friendly
 
 ---
 
@@ -169,12 +177,12 @@ Each event gets a notification by default (**15 minutes before**). You can say:
 ```
 navi/
 ├── app/
-│   ├── api/chat/     # POST /api/chat — Nova conversation
+│   ├── api/chat/     # POST /api/chat — Nova conversation (with input validation)
 │   ├── layout.tsx    # Root layout
-│   └── page.tsx     # Chat UI
+│   └── page.tsx      # Chat UI (accessible, aria-labels)
 ├── lib/
-│   ├── bedrock.ts    # Bedrock client & chat()
-│   └── appleCalendar.ts  # iCloud CalDAV integration
+│   ├── bedrock.ts    # Bedrock Converse API, multi-agent prompt, 4 tools
+│   └── appleCalendar.ts  # iCloud CalDAV: createEvent, listUpcomingEvents
 ├── package.json
 ├── tsconfig.json
 └── README.md

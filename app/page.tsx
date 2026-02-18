@@ -13,7 +13,7 @@ export default function Home() {
     {
       role: "assistant",
       content:
-        "Hi! I'm Navi, your Personal Life Admin. I can help with scheduling, reminders, and organizing. What would you like to do today?",
+        "Hi! I'm Navi, your Personal Life Admin. I can help with scheduling, reminders, and your calendar. Try **\"What do I have today?\"** or ask me to set a reminder—I'll sync it to your iPhone. What would you like to do?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -78,6 +78,8 @@ export default function Home() {
 
   return (
     <div
+      role="application"
+      aria-label="Navi chat"
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -87,6 +89,7 @@ export default function Home() {
       }}
     >
       <header
+        role="banner"
         style={{
           padding: "1rem 2rem",
           borderBottom: "1px solid rgba(255,255,255,0.1)",
@@ -113,6 +116,9 @@ export default function Home() {
         }}
       >
         <div
+          role="log"
+          aria-live="polite"
+          aria-label="Chat messages"
           style={{
             flex: 1,
             overflowY: "auto",
@@ -196,6 +202,9 @@ export default function Home() {
           ))}
           {loading && (
             <div
+              role="status"
+              aria-live="polite"
+              aria-label="Navi is thinking"
               style={{
                 display: "flex",
                 justifyContent: "flex-start",
@@ -228,10 +237,13 @@ export default function Home() {
           >
             <input
               type="text"
+              aria-label="Message input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask Navi anything..."
               disabled={loading}
+              autoComplete="off"
+              enterKeyHint="send"
               style={{
                 flex: 1,
                 padding: "0.75rem 1rem",
@@ -244,6 +256,7 @@ export default function Home() {
             />
             <button
               type="submit"
+              aria-label="Send message"
               disabled={loading || !input.trim()}
               style={{
                 padding: "0.75rem 1.25rem",
